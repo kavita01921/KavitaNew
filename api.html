@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Journal App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      padding: 20px;
+      background: #007BFF;
+      color: white;
+      width: 100%;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      padding: 20px;
+      width: 100%;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Weather Journal</h1>
+  </header>
+
+  <div class="container">
+    <input type="text" id="city" placeholder="Enter city name">
+    <button id="getWeather">Get Weather</button>
+    <div id="weather" class="card"></div>
+
+    <input type="text" id="noteInput" placeholder="Add a note">
+    <button id="addNote">Add Note</button>
+    <div id="notes" class="card"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const apiKey = 'your_api_key'; // Replace with your OpenWeather API key
+    const notes = [];
+
+    document.getElementById('getWeather').addEventListener('click', async () => {
+      const city = document.getElementById('city').value;
+      if (!city) return alert('Please enter a city');
+
+      document.getElementById('weather').innerHTML = 'Loading...';
+
+      setTimeout(async () => { // Event loop simulation
+        try {
+          const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+          const { name, main: { temp, humidity }, weather: [{ description }] } = response.data; // Destructuring
+          document.getElementById('weather').innerHTML = `
+            <h3>${name}</h3>
+            <p>Temperature: ${temp} °C</p>
+            <p>Humidity: ${humidity}%</p>
+            <p>Description: ${description}</p>
+          `;
+        } catch (error) {
+          document.getElementById('weather').innerHTML = 'City not found';
+        }
+      }, 1000);
+    });
+
+    document.getElementById('addNote').addEventListener('click', () => {
+      const noteText = document.getElementById('noteInput').value;
+      if (!noteText) return alert('Enter a note');
+
+      const note = { id: Date.now(), text: noteText };
+      notes.push(note); // Spread operator alternative could be [...notes, newNote]
+      renderNotes();
+    });
+
+    function renderNotes() {
+      const noteArea = document.getElementById('notes');
+      noteArea.innerHTML = '';
+
+      notes.map((note, index) => {
+        const noteEl = document.createElement('div');
+        noteEl.innerHTML = `
+          <p>${index + 1}. ${note.text}</p>
+          <button onclick="editNote(${note.id})">Edit</button>
+        `;
+        noteArea.appendChild(noteEl);
+      });
+
+      const hasNoteWithWord = notes.some(note => note.text.includes('weather'));
+      if (hasNoteWithWord) console.log('At least one note mentions weather');
+    }
+
+    function editNote(id) {
+      const note = notes.find(n => n.id === id);
+      const newText = prompt('Edit note:', note.text);
+      if (newText !== null) {
+        note.text = newText;
+        renderNotes();
+      }
+    }
+
+    // Example callback usage
+    function greeting(name, callback) {
+      console.log('Hello ' + name);
+      callback();
+    }
+
+    greeting('User', () => console.log('Callback called'));
+
+    // var, let, const examples
+    var oldVar = 'var scope';
+    let blockVar = 'let scope';
+    const fixedVar = 'const value';
+  </script>
+</body>
+</html>
